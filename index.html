@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AA - AykolinoApps - Excel list comparison</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS (xlsx.js) for reading/writing Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .drop-zone {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drop-zone.dragover {
+            background-color: #1e293b; /* slate-800 */
+            border-color: #ec4899; /* pink-500 */
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-300 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl">
+        <div class="bg-slate-800 rounded-xl shadow-2xl p-6 md:p-10 border border-slate-700">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-white">Excel-Listenvergleich</h1>
+                <p class="text-slate-400 mt-2">Vergleicht automatisch beide Listen und erstellt eine CSV-Datei.</p>
+            </div>
+
+            <!-- Drop Zones -->
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <!-- Old List Drop Zone -->
+                <div id="drop-zone-old" class="drop-zone border-2 border-dashed border-slate-600 rounded-lg p-6 text-center cursor-pointer bg-slate-800/50 hover:bg-slate-700/50">
+                    <input type="file" id="file-input-old" class="hidden" accept=".xlsx, .xls">
+                    <svg class="mx-auto h-12 w-12 text-slate-500" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <p class="mt-2 text-lg font-semibold text-slate-200">Alte Liste</p>
+                    <p class="text-sm text-slate-400">Drag & Drop oder klicken</p>
+                    <div class="mt-2 flex items-center justify-center space-x-2 min-h-[20px]">
+                        <p id="file-name-old" class="file-name text-sm text-slate-400 font-medium"></p>
+                        <button id="remove-btn-old" title="Datei entfernen" class="hidden text-slate-400 hover:text-red-400 text-2xl font-bold leading-none">&times;</button>
+                    </div>
+                </div>
+
+                <!-- New List Drop Zone -->
+                <div id="drop-zone-new" class="drop-zone border-2 border-dashed border-slate-600 rounded-lg p-6 text-center cursor-pointer bg-slate-800/50 hover:bg-slate-700/50">
+                    <input type="file" id="file-input-new" class="hidden" accept=".xlsx, .xls">
+                    <svg class="mx-auto h-12 w-12 text-slate-500" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                    <p class="mt-2 text-lg font-semibold text-slate-200">Neue Liste</p>
+                    <p class="text-sm text-slate-400">Drag & Drop oder klicken</p>
+                     <div class="mt-2 flex items-center justify-center space-x-2 min-h-[20px]">
+                        <p id="file-name-new" class="file-name text-sm text-slate-400 font-medium"></p>
+                        <button id="remove-btn-new" title="Datei entfernen" class="hidden text-slate-400 hover:text-red-400 text-2xl font-bold leading-none">&times;</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Button -->
+            <div class="text-center">
+                <button id="compare-btn" class="w-full md:w-auto bg-pink-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 focus:ring-offset-slate-800 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
+                    Vergleichen & Download .csv
+                </button>
+            </div>
+            
+            <!-- Status Message -->
+            <div id="status" class="mt-6 text-center text-sm font-medium whitespace-pre-wrap min-h-[20px]"></div>
+        </div>
+        <footer class="mt-6 text-slate-500 text-sm flex justify-between items-center px-2">
+            <div>Version 1.03</div>
+            <div>©AykolinoApps</div>
+        </footer>
+    </div>
+
+    <script>
+        // File storage
+        let oldFile = null;
+        let newFile = null;
+
+        // --- Setup Drop Zone Functionality ---
+        function setupDropZone(dropZoneId, inputId, fileNameId, removeBtnId, fileStore) {
+            const dropZone = document.getElementById(dropZoneId);
+            const fileInput = document.getElementById(inputId);
+            const fileNameDisplay = document.getElementById(fileNameId);
+            const removeBtn = document.getElementById(removeBtnId);
+
+            const handleFile = (file) => {
+                fileStore(file);
+                fileNameDisplay.textContent = file.name;
+                removeBtn.classList.remove('hidden');
+            };
+
+            dropZone.addEventListener('click', () => {
+                if (!fileInput.files[0]) {
+                    fileInput.click();
+                }
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    handleFile(fileInput.files[0]);
+                }
+            });
+
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevents dropZone click event from firing
+                fileStore(null);
+                fileNameDisplay.textContent = '';
+                fileInput.value = ''; // Reset the file input
+                removeBtn.classList.add('hidden');
+            });
+        }
+        
+        setupDropZone('drop-zone-old', 'file-input-old', 'file-name-old', 'remove-btn-old', (file) => { oldFile = file; });
+        setupDropZone('drop-zone-new', 'file-input-new', 'file-name-new', 'remove-btn-new', (file) => { newFile = file; });
+
+        // --- Main Comparison Logic ---
+        const compareBtn = document.getElementById('compare-btn');
+        const statusDiv = document.getElementById('status');
+        
+        compareBtn.addEventListener('click', async () => {
+            if (!oldFile || !newFile) {
+                updateStatus('Bitte wählen Sie beide Excel-Dateien aus.', 'error');
+                return;
+            }
+
+            updateStatus('Dateien werden verarbeitet...', 'loading');
+            compareBtn.disabled = true;
+
+            try {
+                const [oldWorkbook, newWorkbook] = await Promise.all([
+                    readExcelWorkbook(oldFile),
+                    readExcelWorkbook(newFile)
+                ]);
+
+                const oldSheetName = oldWorkbook.SheetNames[0];
+                const newSheetName = newWorkbook.SheetNames[0];
+                if (!oldSheetName || !newSheetName) {
+                    throw new Error("Fehler: Eine oder beide Dateien enthalten keine Blätter.");
+                }
+                const oldWorksheet = oldWorkbook.Sheets[oldSheetName];
+                const newWorksheet = newWorkbook.Sheets[newSheetName];
+
+                /**
+                 * Finds the first column and row where the actual data starts.
+                 * It assumes data cells contain at least one number, distinguishing them from text headers.
+                 * @param {object} worksheet - The SheetJS worksheet object.
+                 * @returns {object|null} An object with {col, row} indices or null if no data is found.
+                 */
+                const findDataStart = (worksheet) => {
+                    if (!worksheet || !worksheet['!ref']) return null;
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    let dataCol = -1;
+
+                    // First, find the first column that contains any data to avoid empty leading columns.
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        for (let R = range.s.r; R <= Math.min(range.e.r, 20); ++R) { // Check first 20 rows
+                            const cell = worksheet[XLSX.utils.encode_cell({ c: C, r: R })];
+                            if (cell && cell.v && String(cell.v).trim()) {
+                                dataCol = C;
+                                break;
+                            }
+                        }
+                        if (dataCol !== -1) break;
+                    }
+
+                    if (dataCol === -1) return null; // No content found at all.
+
+                    // Now, in that column, find the first row that contains a digit.
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        const cell = worksheet[XLSX.utils.encode_cell({ c: dataCol, r: R })];
+                        // Check if the cell value exists and contains at least one digit (/\d/).
+                        if (cell && cell.v && /\d/.test(String(cell.v))) {
+                            return { col: dataCol, row: R }; // This is likely the start of the data.
+                        }
+                    }
+
+                    return null; // No row with a number found in the first data column.
+                };
+
+                /**
+                 * Extracts all article numbers from a worksheet using the dynamic start position.
+                 * @param {object} worksheet - The SheetJS worksheet object.
+                 * @returns {Set<string>} A set of unique article numbers.
+                 */
+                const extractArticles = (worksheet) => {
+                    const articles = new Set();
+                    const startPos = findDataStart(worksheet);
+
+                    if (!startPos) return articles; // No data start position found
+
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    for (let R = startPos.row; R <= range.e.r; ++R) {
+                        const cell = worksheet[XLSX.utils.encode_cell({ c: startPos.col, r: R })];
+                        if (cell && cell.v) {
+                             const value = String(cell.v).trim();
+                             if (value) {
+                                 articles.add(value);
+                             }
+                        }
+                    }
+                    return articles;
+                };
+
+                const oldArticles = extractArticles(oldWorksheet);
+                const newArticles = extractArticles(newWorksheet);
+                
+                if (oldArticles.size === 0) {
+                     throw new Error("Fehler: Konnte keine Artikelnummern (Zellen mit Zahlen) in der 'Alten Liste' finden. Bitte überprüfen Sie die Datei.");
+                }
+                 if (newArticles.size === 0) {
+                    throw new Error("Fehler: Konnte keine Artikelnummern (Zellen mit Zahlen) in der 'Neuen Liste' finden. Bitte überprüfen Sie die Datei.");
+                }
+
+                const outputData = [];
+                let addCount = 0;
+                let deleteCount = 0;
+
+                // Process all articles from the new list as 'add'
+                newArticles.forEach(article => {
+                    outputData.push({
+                        'Webshop Artikelnr.': '',
+                        'Artikelnr. (MBGTC)': article,
+                        'Variantencode': '*',
+                        'Seriennr.': '*',
+                        'Shop ID': 2,
+                        'Kategorie ID': '8ae21e8406c1c63158bb0a155910ce24',
+                        'Status': 'add'
+                    });
+                    addCount++;
+                });
+
+                // Process articles that are only in the old list as 'delete'
+                oldArticles.forEach(article => {
+                    if (!newArticles.has(article)) {
+                        outputData.push({
+                            'Webshop Artikelnr.': '',
+                            'Artikelnr. (MBGTC)': article,
+                            'Variantencode': '*',
+                            'Seriennr.': '*',
+                            'Shop ID': 2,
+                            'Kategorie ID': '8ae21e8406c1c63158bb0a155910ce24',
+                            'Status': 'delete'
+                        });
+                        deleteCount++;
+                    }
+                });
+
+                // Generate CSV instead of XLSX
+                const worksheet = XLSX.utils.json_to_sheet(outputData);
+
+                // Find and clear the header for the 'Status' column
+                const headerRange = XLSX.utils.decode_range(worksheet['!ref']);
+                for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+                    if (worksheet[cellAddress] && worksheet[cellAddress].v === 'Status') {
+                        worksheet[cellAddress].v = ''; // Set the header to an empty string
+                        break; // Exit the loop once found
+                    }
+                }
+                
+                const csvString = XLSX.utils.sheet_to_csv(worksheet, { FS: ';' }); // FS: ';' for German CSV
+                const blob = new Blob(["\uFEFF" + csvString], { type: 'text/csv;charset=utf-8;' }); // \uFEFF for UTF-8 BOM
+
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "ergebnis_liste.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                updateStatus(`Vergleich erfolgreich! ${addCount} Artikel mit Status 'add', ${deleteCount} Artikel mit Status 'delete'. CSV-Datei wurde heruntergeladen.`, 'success');
+
+            } catch (error) {
+                console.error(error);
+                updateStatus(`${error.message}`, 'error');
+            } finally {
+                compareBtn.disabled = false;
+            }
+        });
+
+        // --- Helper Functions ---
+        function readExcelWorkbook(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = new Uint8Array(event.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        resolve(workbook);
+                    } catch (e) {
+                        reject(new Error("Konnte die Excel-Datei nicht lesen. Ist sie beschädigt?"));
+                    }
+                };
+                reader.onerror = (error) => reject(new Error("Fehler beim Lesen der Datei."));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        function updateStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = 'mt-6 text-center text-sm font-medium whitespace-pre-wrap min-h-[20px]';
+            switch (type) {
+                case 'error': statusDiv.classList.add('text-red-400'); break;
+                case 'success': statusDiv.classList.add('text-green-400'); break;
+                case 'warning': statusDiv.classList.add('text-amber-400'); break;
+                case 'loading':
+                default: statusDiv.classList.add('text-slate-400'); break;
+            }
+        } // Marquee Title Effect
+        (function() {
+            const originalTitle = document.title + " ";
+            let titleText = originalTitle;
+            function marquee() {
+                titleText = titleText.substring(1, titleText.length) + titleText.substring(0, 1);
+                document.title = titleText;
+            }
+            setInterval(marquee, 300); // Speed in milliseconds
+        })();
+    </script>
+</body>
+</html>
