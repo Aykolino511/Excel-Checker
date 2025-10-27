@@ -1,217 +1,28 @@
-<!DOCTYPE html>\n<html lang="de" class="scroll-smooth"><head>
+<!DOCTYPE html>
+<html lang="de">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MBUPS - ©AykolinoApps</title>
-
-    <!-- Tailwind CSS -->
+    <title>AA - AykolinoApps - Excel list comparison</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&amp;display=swap" rel="stylesheet">
-    <link rel="icon" href="favicon-32x32.png" type="image/x-icon">
-
+    <!-- SheetJS (xlsx.js) for reading/writing Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Globale Stile & Animationen */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0a0a0a;
-            color: #f5f5f5;
-            overflow-x: hidden;
         }
-
-        .gradient-text {
-            background: linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-fill-color: transparent;
+        .drop-zone {
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
         }
-
-        .card {
-            background-color: rgba(23, 23, 23, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: all 0.3s ease-in-out;
+        .drop-zone.dragover {
+            background-color: #1e293b; /* slate-800 */
+            border-color: #ec4899; /* pink-500 */
         }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            border-color: rgba(139, 92, 246, 0.5); /* Violet-500 */
-        }
-
-        .glow-effect {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0) 60%);
-            animation: rotateGlow 15s linear infinite;
-        }
-
-        @keyframes rotateGlow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* Scroll-in Animation */
-        .fade-in-up {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-
-        .fade-in-up.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* Header Stile */
-        .header {
-            animation: fadeInDown 0.8s ease-out;
-        }
-
-        .header-scrolled {
-            background-color: rgba(10, 10, 10, 0.7);
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* --- NEUE & VERBESSERTE Sprachauswahl Stile --- */
-        .lang-switcher-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 10px;
-            background-color: #111827; /* bg-gray-900 */
-            border-radius: 0.5rem; /* rounded-lg */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-            width: 160px; /* Etwas breiter für die Flaggen */
-            z-index: 60;
-            overflow: hidden;
-            /* Animations-Eigenschaften */
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: opacity 0.2s ease-out, transform 0.2s ease-out, visibility 0.2s;
-        }
-
-        .lang-switcher-dropdown.open {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        /* --- Logo Animationen --- */
-        .logo-utm { position: relative; width: 80px; height: 80px; }
-        .utm-center { position: absolute; width: 16px; height: 16px; background-color: #3b82f6; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: pulse 2s infinite ease-in-out; }
-        .utm-dot { position: absolute; width: 8px; height: 8px; background-color: #a78bfa; border-radius: 50%; top: 50%; left: 50%; margin: -4px; }
-        .utm-dot:nth-child(2) { animation: utm-orbit 4s infinite linear; animation-delay: 0s; }
-        .utm-dot:nth-child(3) { animation: utm-orbit 4s infinite linear; animation-delay: -1s; }
-        .utm-dot:nth-child(4) { animation: utm-orbit 4s infinite linear; animation-delay: -2s; }
-        .utm-dot:nth-child(5) { animation: utm-orbit 4s infinite linear; animation-delay: -3s; }
-        @keyframes pulse { 0%, 100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); } 50% { transform: translate(-50%, -50%) scale(1.1); box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0); } }
-        @keyframes utm-orbit { from { transform: rotate(0deg) translateX(30px) rotate(0deg); } to { transform: rotate(360deg) translateX(30px) rotate(-360deg); } }
-        .logo-html { width: 80px; height: 80px; display: flex; align-items: center; justify-content: space-between; font-size: 2.5rem; font-weight: bold; color: #ec4899; }
-        .html-arrow { font-size: 1.5rem; animation: html-translate 2s infinite ease-in-out; color: #f5f5f5; }
-        @keyframes html-translate { 0%, 100% { transform: translateX(0); opacity: 0.7; } 50% { transform: translateX(8px) scale(1.1); opacity: 1; } }
-        .logo-excel { width: 80px; height: 80px; display: flex; justify-content: center; align-items: center; gap: 8px; }
-        .excel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; width: 30px; height: 40px; }
-        .excel-cell { width: 8px; height: 8px; background-color: #10b981; border-radius: 1px; opacity: 0.6; }
-        .excel-grid .excel-cell:nth-child(2) { background-color: #3b82f6; } .excel-grid .excel-cell:nth-child(5) { animation: excel-blink 2.5s infinite; animation-delay: 0.5s; } .excel-grid .excel-cell:nth-child(8) { background-color: #f97316; }
-        @keyframes excel-blink { 0%, 100% { transform: scale(1); opacity: 0.6; } 50% { transform: scale(1.4); opacity: 1; } }
-        .logo-an { width: 80px; height: 80px; background-color: rgba(255,255,255,0.05); border-radius: 8px; font-family: 'Courier New', Courier, monospace; font-size: 1.5rem; color: #facc15; overflow: hidden; }
-        .an-reel { animation: an-scroll-reel 4.5s infinite; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
-        .an-number-item { height: 80px; display: flex; justify-content: center; align-items: center; }
-        @keyframes an-scroll-reel { 0%, 25% { transform: translateY(0); } 30%, 55% { transform: translateY(-80px); } 60%, 85% { transform: translateY(-160px); } 90%, 100% { transform: translateY(-240px); } }
     </style>
 </head>
-<body class="" style=""><div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden">
-        <div class="glow-effect"></div>
-    </div><div class="container mx-auto px-4 sm:px-6 lg:px-8"><nav id="main-header" class="header fixed top-0 left-0 w-full z-50 backdrop-blur-md border-b border-transparent transition-colors duration-300">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-20">
-                    <a href="https://aykolino.de" class="text-2xl font-bold tracking-tight text-white">
-                        Aykolino<span class="gradient-text">Apps</span>
-                    </a>
-
-                    <!-- Desktop Navigation -->
-                    <div class="hidden md:flex items-center space-x-8">
-                        <a href="https://uebermich.aykolino.de" class="text-gray-300 hover:text-white transition-colors" data-translate-key="navAbout">Über mich</a>
-                        <a href="mailto:ayko.tiedtke2@yahoo.de" class="text-gray-300 hover:text-white transition-colors" data-translate-key="navContact">Kontakt</a>
-                        
-                        <!-- Sprachauswahl -->
-                        <div class="relative lang-switcher">
-                            <button id="lang-switcher-button" class="flex items-center text-gray-300 hover:text-white transition-colors">
-                                <img id="current-flag-desktop" src="" alt="Language flag" class="w-5 h-auto mr-2 rounded-sm object-cover">
-                                <span id="current-lang-desktop">DE</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
-                            </button>
-                            <div id="lang-switcher-dropdown" class="lang-switcher-dropdown p-2 space-y-1">
-                                <a href="#" class="flex items-center w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded-md transition-colors" onclick="setLanguage('de', event)">
-                                    <img src="https://flagcdn.com/w40/de.png" alt="German flag" class="w-5 h-auto mr-3 rounded-sm">
-                                    <span>Deutsch</span>
-                                </a>
-                                <a href="#" class="flex items-center w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded-md transition-colors" onclick="setLanguage('en', event)">
-                                    <img src="https://flagcdn.com/w40/gb.png" alt="British flag" class="w-5 h-auto mr-3 rounded-sm">
-                                    <span>English</span>
-                                </a>
-                                <a href="#" class="flex items-center w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded-md transition-colors" onclick="setLanguage('fr', event)">
-                                    <img src="https://flagcdn.com/w40/fr.png" alt="French flag" class="w-5 h-auto mr-3 rounded-sm">
-                                    <span>Français</span>
-                                </a>
-                                <a href="#" class="flex items-center w-full px-3 py-2 text-sm text-gray-200 hover:bg-gray-700 rounded-md transition-colors" onclick="setLanguage('es', event)">
-                                     <img src="https://flagcdn.com/w40/es.png" alt="Spanish flag" class="w-5 h-auto mr-3 rounded-sm">
-                                    <span>Español</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Mobile Menu Button -->
-                    <div class="md:hidden">
-                        <button id="mobile-menu-button" class="text-white">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <!-- Mobile Menu -->
-            <div id="mobile-menu" class="hidden md:hidden">
-                <a href="https://uebermich.aykolino.de" class="block py-3 px-4 text-sm text-gray-200 hover:bg-gray-800" data-translate-key="navAbout">Über mich</a>
-                <a href="mailto:ayko.tiedtke2@yahoo.de" class="block py-3 px-4 text-sm text-gray-200 hover:bg-gray-800" data-translate-key="navContact">Kontakt</a>
-                <div class="px-4 pt-3 pb-1 border-t border-gray-700">
-                    <p class="text-xs text-gray-400 mb-2" data-translate-key="languageLabelMobile">Sprache:</p>
-                    <a href="#" class="flex items-center w-full py-2 text-sm text-gray-200 hover:bg-gray-800" onclick="setLanguage('de', event)">
-                         <img src="https://flagcdn.com/w40/de.png" alt="German flag" class="w-5 h-auto mr-3 rounded-sm"> Deutsch
-                    </a>
-                    <a href="#" class="flex items-center w-full py-2 text-sm text-gray-200 hover:bg-gray-800" onclick="setLanguage('en', event)">
-                         <img src="https://flagcdn.com/w40/gb.png" alt="British flag" class="w-5 h-auto mr-3 rounded-sm"> English
-                    </a>
-                    <a href="#" class="flex items-center w-full py-2 text-sm text-gray-200 hover:bg-gray-800" onclick="setLanguage('fr', event)">
-                         <img src="https://flagcdn.com/w40/fr.png" alt="French flag" class="w-5 h-auto mr-3 rounded-sm"> Français
-                    </a>
-                    <a href="#" class="flex items-center w-full py-2 text-sm text-gray-200 hover:bg-gray-800" onclick="setLanguage('es', event)">
-                         <img src="https://flagcdn.com/w40/es.png" alt="Spanish flag" class="w-5 h-auto mr-3 rounded-sm"> Español
-                    </a>
-                </div>
-            </div>
-        </nav><main class="pt-24 flex flex-col items-center">
+<body class="bg-slate-900 text-slate-300 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-4xl">
         <div class="bg-slate-800 rounded-xl shadow-2xl p-6 md:p-10 border border-slate-700">
@@ -229,10 +40,10 @@
                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
                     <p class="mt-2 text-lg font-semibold text-slate-200">Alte Liste</p>
-                    <p class="text-sm text-slate-400">Drag &amp; Drop oder klicken</p>
+                    <p class="text-sm text-slate-400">Drag & Drop oder klicken</p>
                     <div class="mt-2 flex items-center justify-center space-x-2 min-h-[20px]">
                         <p id="file-name-old" class="file-name text-sm text-slate-400 font-medium"></p>
-                        <button id="remove-btn-old" title="Datei entfernen" class="hidden text-slate-400 hover:text-red-400 text-2xl font-bold leading-none">×</button>
+                        <button id="remove-btn-old" title="Datei entfernen" class="hidden text-slate-400 hover:text-red-400 text-2xl font-bold leading-none">&times;</button>
                     </div>
                 </div>
 
@@ -243,10 +54,10 @@
                         <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                     </svg>
                     <p class="mt-2 text-lg font-semibold text-slate-200">Neue Liste</p>
-                    <p class="text-sm text-slate-400">Drag &amp; Drop oder klicken</p>
+                    <p class="text-sm text-slate-400">Drag & Drop oder klicken</p>
                      <div class="mt-2 flex items-center justify-center space-x-2 min-h-[20px]">
                         <p id="file-name-new" class="file-name text-sm text-slate-400 font-medium"></p>
-                        <button id="remove-btn-new" title="Datei entfernen" class="hidden text-slate-400 hover:text-red-400 text-2xl font-bold leading-none">×</button>
+                        <button id="remove-btn-new" title="Datei entfernen" class="hidden text-slate-400 hover:text-red-400 text-2xl font-bold leading-none">&times;</button>
                     </div>
                 </div>
             </div>
@@ -254,7 +65,7 @@
             <!-- Action Button -->
             <div class="text-center">
                 <button id="compare-btn" class="w-full md:w-auto bg-pink-600 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 focus:ring-offset-slate-800 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed">
-                    Vergleichen &amp; Download .csv
+                    Vergleichen & Download .csv
                 </button>
             </div>
             
@@ -267,267 +78,264 @@
         </footer>
     </div>
 
-    
+    <script>
+        // File storage
+        let oldFile = null;
+        let newFile = null;
 
+        // --- Setup Drop Zone Functionality ---
+        function setupDropZone(dropZoneId, inputId, fileNameId, removeBtnId, fileStore) {
+            const dropZone = document.getElementById(dropZoneId);
+            const fileInput = document.getElementById(inputId);
+            const fileNameDisplay = document.getElementById(fileNameId);
+            const removeBtn = document.getElementById(removeBtnId);
 
-</main><footer class="text-center py-10 mt-20 border-t border-gray-800">
-            <p class="text-gray-500" data-translate-key="footerText">
-                © <span id="year"></span> AykolinoApps. Mit Leidenschaft.
-            </p>
-            <p class="text-xs text-gray-600 mt-2" data-translate-key="footerDisclaimer">
-                Diese Domain wird nicht für gewerbliche Zwecke genutzt.
-            </p>
-        </footer></div><script>
-const translations = {
-    'de': {
-        langName: 'DE', flagUrl: 'https://flagcdn.com/w40/de.png',
-        navAbout: 'Über mich', navContact: 'Kontakt', languageLabelMobile: 'Sprache:',
-        footerText: '© <span id="year-footer"></span> AykolinoApps. Mit Leidenschaft.', footerDisclaimer: 'Diese Domain wird nicht für gewerbliche Zwecke genutzt.',
-        // HTML Translator App
-        pageTitle: 'HTML Translator Pro', mainTitle: 'HTML Translator Pro',
-        mainSubtitle: 'Übersetzt Textinhalte und passt Domain-Endungen (.de, .com etc.) in Links automatisch an.',
-        originalCodeLabel: 'Original-Code',
-        inputPlaceholder: 'HTML-Datei hierher ziehen oder Code einfügen...',
-        inputPlaceholderSpan: 'HTML-Datei hierher ziehen oder Code einfügen',
-        translatedCodeLabel: 'Übersetzter Code', copyButton: 'Kopieren',
-        langSelectGerman: 'Deutsch', langSelectEnglish: 'Englisch', langSelectFrench: 'Französisch',
-        langSelectItalian: 'Italienisch', langSelectSpanish: 'Spanisch',
-        translateButton: 'Übersetzen', downloadButton: 'Download',
-        // UTM Generator App
-        utmGeneratorTitle: 'UTM Code Generator',
-        websiteUrlLabel: 'Website-URL *',
-        utmSourceLabel: 'UTM Source *',
-        utmMediumLabel: 'UTM Medium *',
-        utmCampaignLabel: 'UTM Campaign *',
-        utmContentLabel: 'UTM Content',
-        utmTermLabel: 'UTM Term',
-        generatedUrlLabel: 'Generierte URL',
-        pasteButton: 'Einfügen',
-        placeholderExampleUrl: 'https://example.com',
-        placeholderSource: 'z.B. newsletter, twitter, google',
-        placeholderMedium: 'z.B. E-mail, social, cpc',
-        placeholderCampaign: 'z.B. promotion, sale',
-        placeholderContent: 'z.B. any CTA, Headline',
-        placeholderTerm: 'Keywords für Ihre bezahlten Suchkampagnen',
-        // Excel Compare App
-        excelCompareTitle: 'Excel-Listenvergleich',
-        excelCompareSubtitle: 'Vergleicht automatisch beide Listen und erstellt eine CSV-Datei.',
-        oldListLabel: 'Alte Liste',
-        newListLabel: 'Neue Liste',
-        dragOrClick: 'Drag & Drop oder klicken',
-        compareAndDownloadButton: 'Vergleichen & Download .csv'
-    },
-    'en': {
-        langName: 'EN', flagUrl: 'https://flagcdn.com/w40/gb.png',
-        navAbout: 'About Me', navContact: 'Contact', languageLabelMobile: 'Language:',
-        footerText: '© <span id="year-footer"></span> AykolinoApps. With passion.', footerDisclaimer: 'This domain is not used for commercial purposes.',
-        // HTML Translator App
-        pageTitle: 'HTML Translator Pro', mainTitle: 'HTML Translator Pro',
-        mainSubtitle: 'Translates text content and automatically adjusts domain endings (.de, .com etc.) in links.',
-        originalCodeLabel: 'Original Code',
-        inputPlaceholder: 'Drag and drop HTML file here or paste code...',
-        inputPlaceholderSpan: 'Drag and drop HTML file here or paste code',
-        translatedCodeLabel: 'Translated Code', copyButton: 'Copy',
-        langSelectGerman: 'German', langSelectEnglish: 'English', langSelectFrench: 'French',
-        langSelectItalian: 'Italian', langSelectSpanish: 'Spanish',
-        translateButton: 'Translate', downloadButton: 'Download',
-        // UTM Generator App
-        utmGeneratorTitle: 'UTM Code Generator',
-        websiteUrlLabel: 'Website URL *',
-        utmSourceLabel: 'UTM Source *',
-        utmMediumLabel: 'UTM Medium *',
-        utmCampaignLabel: 'UTM Campaign *',
-        utmContentLabel: 'UTM Content',
-        utmTermLabel: 'UTM Term',
-        generatedUrlLabel: 'Generated URL',
-        pasteButton: 'Paste',
-        placeholderExampleUrl: 'https://example.com',
-        placeholderSource: 'e.g. newsletter, twitter, google',
-        placeholderMedium: 'e.g. email, social, cpc',
-        placeholderCampaign: 'e.g. promotion, sale',
-        placeholderContent: 'e.g. any CTA, headline',
-        placeholderTerm: 'Keywords for your paid search campaigns',
-        // Excel Compare App
-        excelCompareTitle: 'Excel List Comparison',
-        excelCompareSubtitle: 'Automatically compares both lists and creates a CSV file.',
-        oldListLabel: 'Old List',
-        newListLabel: 'New List',
-        dragOrClick: 'Drag & Drop or click',
-        compareAndDownloadButton: 'Compare & Download .csv'
-    },
-    'fr': {
-        langName: 'FR', flagUrl: 'https://flagcdn.com/w40/fr.png',
-        navAbout: 'À propos de moi', navContact: 'Contact', languageLabelMobile: 'Langue:',
-        footerText: '© <span id="year-footer"></span> AykolinoApps. Avec passion.', footerDisclaimer: "Ce domaine n'est pas utilisé à des fins commerciales.",
-        // HTML Translator App
-        pageTitle: 'HTML Translator Pro', mainTitle: 'HTML Translator Pro',
-        mainSubtitle: 'Traduit le contenu textuel et ajuste automatiquement les extensions de domaine (.de, .com etc.) dans les liens.',
-        originalCodeLabel: 'Code Original',
-        inputPlaceholder: 'Glissez-déposez le fichier HTML ici ou collez le code...',
-        inputPlaceholderSpan: 'Glissez-déposez le fichier HTML ici ou collez le code',
-        translatedCodeLabel: 'Code Traduit', copyButton: 'Copier',
-        langSelectGerman: 'Allemand', langSelectEnglish: 'Anglais', langSelectFrench: 'Français',
-        langSelectItalian: 'Italien', langSelectSpanish: 'Espagnol',
-        translateButton: 'Traduire', downloadButton: 'Télécharger',
-        // UTM Generator App
-        utmGeneratorTitle: 'Générateur de code UTM',
-        websiteUrlLabel: 'URL du site Web *',
-        utmSourceLabel: 'Source UTM *',
-        utmMediumLabel: 'Medium UTM *',
-        utmCampaignLabel: 'Campagne UTM *',
-        utmContentLabel: 'Contenu UTM',
-        utmTermLabel: 'Terme UTM',
-        generatedUrlLabel: 'URL générée',
-        pasteButton: 'Coller',
-        placeholderExampleUrl: 'https://example.com',
-        placeholderSource: 'par ex. newsletter, twitter, google',
-        placeholderMedium: 'par ex. e-mail, social, cpc',
-        placeholderCampaign: 'par ex. promotion, vente',
-        placeholderContent: 'par ex. tout CTA, titre',
-        placeholderTerm: 'Mots-clés pour vos campagnes de recherche payantes',
-        // Excel Compare App
-        excelCompareTitle: 'Comparaison de listes Excel',
-        excelCompareSubtitle: 'Compare automatiquement les deux listes et crée un fichier CSV.',
-        oldListLabel: 'Ancienne Liste',
-        newListLabel: 'Nouvelle Liste',
-        dragOrClick: 'Glisser-déposer ou cliquer',
-        compareAndDownloadButton: 'Comparer & Télécharger .csv'
-    },
-    'es': {
-        langName: 'ES', flagUrl: 'https://flagcdn.com/w40/es.png',
-        navAbout: 'Sobre mí', navContact: 'Contacto', languageLabelMobile: 'Idioma:',
-        footerText: '© <span id="year-footer"></span> AykolinoApps. Con pasión.', footerDisclaimer: 'Este dominio no se utiliza con fines comerciales.',
-        // HTML Translator App
-        pageTitle: 'HTML Translator Pro', mainTitle: 'HTML Translator Pro',
-        mainSubtitle: 'Traduce el contenido del texto y ajusta automáticamente las terminaciones de dominio (.de, .com etc.) en los enlaces.',
-        originalCodeLabel: 'Código Original',
-        inputPlaceholder: 'Arrastre y suelte el archivo HTML aquí o pegue el código...',
-        inputPlaceholderSpan: 'Arrastre y suelte el archivo HTML aquí o pegue el código',
-        translatedCodeLabel: 'Código Traducido', copyButton: 'Copiar',
-        langSelectGerman: 'Alemán', langSelectEnglish: 'Inglés', langSelectFrench: 'Francés',
-        langSelectItalian: 'Italiano', langSelectSpanish: 'Español',
-        translateButton: 'Traducir', downloadButton: 'Descargar',
-        // UTM Generator App
-        utmGeneratorTitle: 'Generador de código UTM',
-        websiteUrlLabel: 'URL del sitio web *',
-        utmSourceLabel: 'Fuente UTM *',
-        utmMediumLabel: 'Medio UTM *',
-        utmCampaignLabel: 'Campaña UTM *',
-        utmContentLabel: 'Contenido UTM',
-        utmTermLabel: 'Término UTM',
-        generatedUrlLabel: 'URL generada',
-        pasteButton: 'Pegar',
-        placeholderExampleUrl: 'https://example.com',
-        placeholderSource: 'p.ej. newsletter, twitter, google',
-        placeholderMedium: 'p.ej. email, social, cpc',
-        placeholderCampaign: 'p.ej. promoción, venta',
-        placeholderContent: 'p.ej. cualquier CTA, titular',
-        placeholderTerm: 'Palabras clave para sus campañas de búsqueda de pago',
-        // Excel Compare App
-        excelCompareTitle: 'Comparación de listas de Excel',
-        excelCompareSubtitle: 'Compara automáticamente ambas listas y crea un archivo CSV.',
-        oldListLabel: 'Lista Antigua',
-        newListLabel: 'Lista Nueva',
-        dragOrClick: 'Arrastrar y soltar o hacer clic',
-        compareAndDownloadButton: 'Comparar y Descargar .csv'
-    }
-};
+            const handleFile = (file) => {
+                fileStore(file);
+                fileNameDisplay.textContent = file.name;
+                removeBtn.classList.remove('hidden');
+            };
 
-function addTranslateKeys() {
-    const textToKeyMap = {};
-    const deTranslations = translations.de;
-    for (const key in deTranslations) {
-        const value = deTranslations[key];
-        if (typeof value === 'string' && value.length > 2 && !value.includes('<')) {
-            textToKeyMap[value.trim()] = key;
+            dropZone.addEventListener('click', () => {
+                if (!fileInput.files[0]) {
+                    fileInput.click();
+                }
+            });
+
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    handleFile(fileInput.files[0]);
+                }
+            });
+
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length > 0) {
+                    fileInput.files = e.dataTransfer.files;
+                    handleFile(e.dataTransfer.files[0]);
+                }
+            });
+
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevents dropZone click event from firing
+                fileStore(null);
+                fileNameDisplay.textContent = '';
+                fileInput.value = ''; // Reset the file input
+                removeBtn.classList.add('hidden');
+            });
         }
-    }
+        
+        setupDropZone('drop-zone-old', 'file-input-old', 'file-name-old', 'remove-btn-old', (file) => { oldFile = file; });
+        setupDropZone('drop-zone-new', 'file-input-new', 'file-name-new', 'remove-btn-new', (file) => { newFile = file; });
 
-    document.querySelectorAll('[placeholder]').forEach(el => {
-        const placeholderText = el.getAttribute('placeholder')?.trim();
-        if (placeholderText && textToKeyMap[placeholderText]) {
-            el.setAttribute('data-translate-key-placeholder', textToKeyMap[placeholderText]);
-        }
-    });
-
-    if (textToKeyMap[document.title.trim()]) {
-         document.documentElement.setAttribute('data-translate-key-title', textToKeyMap[document.title.trim()]);
-    }
-
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-
-    nodes.forEach(node => {
-        const text = node.nodeValue.trim();
-        if (textToKeyMap[text]) {
-            const parent = node.parentElement;
-            if (parent && !parent.closest('script, style') && !parent.hasAttribute('data-translate-key')) {
-                 const hasOnlyThisText = Array.from(parent.childNodes).every(
-                    child => child === node || (child.nodeType === Node.TEXT_NODE && !child.nodeValue.trim())
-                 );
-                 if (hasOnlyThisText) {
-                    parent.setAttribute('data-translate-key', textToKeyMap[text]);
-                 }
+        // --- Main Comparison Logic ---
+        const compareBtn = document.getElementById('compare-btn');
+        const statusDiv = document.getElementById('status');
+        
+        compareBtn.addEventListener('click', async () => {
+            if (!oldFile || !newFile) {
+                updateStatus('Bitte wählen Sie beide Excel-Dateien aus.', 'error');
+                return;
             }
-        }
-    });
-}
 
-function setLanguage(lang, event) {
-    if (event) event.preventDefault();
-    const langPack = translations[lang];
-    if (!langPack) return;
-    localStorage.setItem('language', lang);
-    document.documentElement.lang = lang;
+            updateStatus('Dateien werden verarbeitet...', 'loading');
+            compareBtn.disabled = true;
 
-    const titleKey = document.documentElement.getAttribute('data-translate-key-title');
-    if (titleKey && langPack[titleKey]) document.title = langPack[titleKey];
-    
-    document.querySelectorAll('[data-translate-key]').forEach(el => {
-        const key = el.getAttribute('data-translate-key');
-        if (langPack[key]) el.innerHTML = langPack[key];
-    });
+            try {
+                const [oldWorkbook, newWorkbook] = await Promise.all([
+                    readExcelWorkbook(oldFile),
+                    readExcelWorkbook(newFile)
+                ]);
 
-    document.querySelectorAll('[data-translate-key-placeholder]').forEach(el => {
-        const key = el.getAttribute('data-translate-key-placeholder');
-        if (langPack[key]) el.setAttribute('placeholder', langPack[key]);
-    });
+                const oldSheetName = oldWorkbook.SheetNames[0];
+                const newSheetName = newWorkbook.SheetNames[0];
+                if (!oldSheetName || !newSheetName) {
+                    throw new Error("Fehler: Eine oder beide Dateien enthalten keine Blätter.");
+                }
+                const oldWorksheet = oldWorkbook.Sheets[oldSheetName];
+                const newWorksheet = newWorkbook.Sheets[newSheetName];
 
-    const currentLangDesktop = document.getElementById('current-lang-desktop');
-    if (currentLangDesktop) currentLangDesktop.textContent = langPack.langName;
-    const currentFlagDesktop = document.getElementById('current-flag-desktop');
-    if (currentFlagDesktop) {
-        currentFlagDesktop.src = langPack.flagUrl;
-        currentFlagDesktop.alt = `Flag of ${lang}`;
-    }
-    
-    const yearSpan = document.getElementById('year') || document.getElementById('year-footer');
-    if (yearSpan) yearSpan.textContent = new Date().getFullYear();
+                /**
+                 * Finds the first column and row where the actual data starts.
+                 * It assumes data cells contain at least one number, distinguishing them from text headers.
+                 * @param {object} worksheet - The SheetJS worksheet object.
+                 * @returns {object|null} An object with {col, row} indices or null if no data is found.
+                 */
+                const findDataStart = (worksheet) => {
+                    if (!worksheet || !worksheet['!ref']) return null;
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    let dataCol = -1;
 
-    document.getElementById('lang-switcher-dropdown')?.classList.remove('open');
-    document.getElementById('mobile-menu')?.classList.add('hidden');
-};
+                    // First, find the first column that contains any data to avoid empty leading columns.
+                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                        for (let R = range.s.r; R <= Math.min(range.e.r, 20); ++R) { // Check first 20 rows
+                            const cell = worksheet[XLSX.utils.encode_cell({ c: C, r: R })];
+                            if (cell && cell.v && String(cell.v).trim()) {
+                                dataCol = C;
+                                break;
+                            }
+                        }
+                        if (dataCol !== -1) break;
+                    }
 
-document.addEventListener('DOMContentLoaded', () => {
-    addTranslateKeys();
-    const savedLang = localStorage.getItem('language') || 'de';
-    window.setLanguage(savedLang);
+                    if (dataCol === -1) return null; // No content found at all.
 
-    document.getElementById('lang-switcher-button')?.addEventListener('click', (event) => {
-        event.stopPropagation();
-        document.getElementById('lang-switcher-dropdown')?.classList.toggle('open');
-    });
-    window.addEventListener('click', () => document.getElementById('lang-switcher-dropdown')?.classList.remove('open'));
-    document.getElementById('mobile-menu-button')?.addEventListener('click', () => document.getElementById('mobile-menu')?.classList.toggle('hidden'));
-    
-    const header = document.getElementById('main-header');
-    if(header) {
-        window.addEventListener('scroll', () => {
-            header.classList.toggle('header-scrolled', window.scrollY > 10);
+                    // Now, in that column, find the first row that contains a digit.
+                    for (let R = range.s.r; R <= range.e.r; ++R) {
+                        const cell = worksheet[XLSX.utils.encode_cell({ c: dataCol, r: R })];
+                        // Check if the cell value exists and contains at least one digit (/\d/).
+                        if (cell && cell.v && /\d/.test(String(cell.v))) {
+                            return { col: dataCol, row: R }; // This is likely the start of the data.
+                        }
+                    }
+
+                    return null; // No row with a number found in the first data column.
+                };
+
+                /**
+                 * Extracts all article numbers from a worksheet using the dynamic start position.
+                 * @param {object} worksheet - The SheetJS worksheet object.
+                 * @returns {Set<string>} A set of unique article numbers.
+                 */
+                const extractArticles = (worksheet) => {
+                    const articles = new Set();
+                    const startPos = findDataStart(worksheet);
+
+                    if (!startPos) return articles; // No data start position found
+
+                    const range = XLSX.utils.decode_range(worksheet['!ref']);
+                    for (let R = startPos.row; R <= range.e.r; ++R) {
+                        const cell = worksheet[XLSX.utils.encode_cell({ c: startPos.col, r: R })];
+                        if (cell && cell.v) {
+                             const value = String(cell.v).trim();
+                             if (value) {
+                                 articles.add(value);
+                             }
+                        }
+                    }
+                    return articles;
+                };
+
+                const oldArticles = extractArticles(oldWorksheet);
+                const newArticles = extractArticles(newWorksheet);
+                
+                if (oldArticles.size === 0) {
+                     throw new Error("Fehler: Konnte keine Artikelnummern (Zellen mit Zahlen) in der 'Alten Liste' finden. Bitte überprüfen Sie die Datei.");
+                }
+                 if (newArticles.size === 0) {
+                    throw new Error("Fehler: Konnte keine Artikelnummern (Zellen mit Zahlen) in der 'Neuen Liste' finden. Bitte überprüfen Sie die Datei.");
+                }
+
+                const outputData = [];
+                let addCount = 0;
+                let deleteCount = 0;
+
+                // Process all articles from the new list as 'add'
+                newArticles.forEach(article => {
+                    outputData.push({
+                        'Webshop Artikelnr.': '',
+                        'Artikelnr. (MBGTC)': article,
+                        'Variantencode': '*',
+                        'Seriennr.': '*',
+                        'Shop ID': 2,
+                        'Kategorie ID': '8ae21e8406c1c63158bb0a155910ce24',
+                        'Status': 'add'
+                    });
+                    addCount++;
+                });
+
+                // Process articles that are only in the old list as 'delete'
+                oldArticles.forEach(article => {
+                    if (!newArticles.has(article)) {
+                        outputData.push({
+                            'Webshop Artikelnr.': '',
+                            'Artikelnr. (MBGTC)': article,
+                            'Variantencode': '*',
+                            'Seriennr.': '*',
+                            'Shop ID': 2,
+                            'Kategorie ID': '8ae21e8406c1c63158bb0a155910ce24',
+                            'Status': 'delete'
+                        });
+                        deleteCount++;
+                    }
+                });
+
+                // Generate CSV instead of XLSX
+                const worksheet = XLSX.utils.json_to_sheet(outputData);
+
+                // Find and clear the header for the 'Status' column
+                const headerRange = XLSX.utils.decode_range(worksheet['!ref']);
+                for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+                    if (worksheet[cellAddress] && worksheet[cellAddress].v === 'Status') {
+                        worksheet[cellAddress].v = ''; // Set the header to an empty string
+                        break; // Exit the loop once found
+                    }
+                }
+                
+                const csvString = XLSX.utils.sheet_to_csv(worksheet, { FS: ';' }); // FS: ';' for German CSV
+                const blob = new Blob(["\uFEFF" + csvString], { type: 'text/csv;charset=utf-8;' }); // \uFEFF for UTF-8 BOM
+
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", "ergebnis_liste.csv");
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                updateStatus(`Vergleich erfolgreich! ${addCount} Artikel mit Status 'add', ${deleteCount} Artikel mit Status 'delete'. CSV-Datei wurde heruntergeladen.`, 'success');
+
+            } catch (error) {
+                console.error(error);
+                updateStatus(`${error.message}`, 'error');
+            } finally {
+                compareBtn.disabled = false;
+            }
         });
-    }
-});
-// Make setLanguage globally available for onclick attributes
-window.setLanguage = setLanguage;
-</script></body></html>
+
+        // --- Helper Functions ---
+        function readExcelWorkbook(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = new Uint8Array(event.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        resolve(workbook);
+                    } catch (e) {
+                        reject(new Error("Konnte die Excel-Datei nicht lesen. Ist sie beschädigt?"));
+                    }
+                };
+                reader.onerror = (error) => reject(new Error("Fehler beim Lesen der Datei."));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        function updateStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = 'mt-6 text-center text-sm font-medium whitespace-pre-wrap min-h-[20px]';
+            switch (type) {
+                case 'error': statusDiv.classList.add('text-red-400'); break;
+                case 'success': statusDiv.classList.add('text-green-400'); break;
+                case 'warning': statusDiv.classList.add('text-amber-400'); break;
+                case 'loading':
+                default: statusDiv.classList.add('text-slate-400'); break;
+            }
+        } // Marquee Title Effect
+        (function() {
+            const originalTitle = document.title + " ";
+            let titleText = originalTitle;
+            function marquee() {
+                titleText = titleText.substring(1, titleText.length) + titleText.substring(0, 1);
+                document.title = titleText;
+            }
+            setInterval(marquee, 300); // Speed in milliseconds
+        })();
+    </script>
+</body>
+</html>
